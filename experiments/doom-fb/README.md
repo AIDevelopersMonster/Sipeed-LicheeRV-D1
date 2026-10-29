@@ -95,3 +95,32 @@ cd ~/d1-doom-fb/upstream/doomgeneric
 Run in an **interactive** SSH terminal; keys are sent from SSH, pixels go to HDMI. Quit with `q` or Ctrl-C in the active terminal. The backend reads framebuffer layout via read-only FBIOGET_* ioctls, rejects unsupported layouts, never sets video mode, centers its 640x400 rendered rectangle, preserves the original pixels in RAM and restores them upon *normal exit*. **Power loss, SIGKILL, crash, or tty redraw can prevent restoration**; do not imply guaranteed recovery for abnormal stops. A test may temporarily overwrite the framebuffer content but should not alter display configuration. Do not claim hardware/gameplay PASS until the operator confirms the visible result.
 
 SSH terminal keyboard input is an initial prototype; holding keys, autorepeat and menu use may require refinement. FPS logging is a rough per-frame indicator, not benchmark proof.
+
+
+## Operator input and normal restart behaviour (first hardware run)
+
+The first controlled command used `timeout --signal=INT 30s`. **It is supposed to terminate after 30 seconds**; an automatic process exit is not evidence of an Ubuntu reboot. The Doom engine itself has an attract/demo sequence if launched without a level start (or after returning to the title screen). Here `-warp 1 1` explicitly sets `autostart=true` in pinned upstream `d_main.c`, so if the title/demo sequence appears instead of the level in this exact invocation, investigate it rather than assuming normal behaviour.
+
+The operator subsequently clarified that **the small flickering text appears game-related**, rather than a proven console overlay. Do **not** clear or switch the HDMI TTY merely based on that observation.
+
+### Try playing for up to three minutes
+
+From the SSH terminal (keyboard input here; HDMI is the display):
+
+```bash
+cd ~/d1-doom-fb/upstream/doomgeneric
+timeout --signal=INT 180s ./doomgeneric \
+  -iwad ~/d1-doom-fb/freedoom1.wad \
+  -nosound -skill 3 -warp 1 1
+```
+
+- `W/S`: forward/backward; `A/D`: rotate; arrow keys are also translated.
+- `F`: fire.
+- `E` or Space: use/open.
+- Enter: menu selection; Escape: menu.
+- `Q`: quit our custom executable; `Ctrl+C`: interrupt.
+- Focus the **SSH terminal** before sending input, not the HDMI display.
+
+Input uses a prototype 170 ms synthetic key hold, so long-press behaviour may be imperfect. The auto-stop at 180 seconds intentionally retains the successful `SIGINT` exit path and framebuffer restoration. Keep UART connected; neither the kernel nor HDMI driver requires configuration changes.
+
+**Experimental status:** HDMI display PASS, observed Doom image and frame-loop reporting; level navigation, firing, and playable controls still require operator confirmation.
