@@ -124,3 +124,26 @@ timeout --signal=INT 180s ./doomgeneric \
 Input uses a prototype 170 ms synthetic key hold, so long-press behaviour may be imperfect. The auto-stop at 180 seconds intentionally retains the successful `SIGINT` exit path and framebuffer restoration. Keep UART connected; neither the kernel nor HDMI driver requires configuration changes.
 
 **Experimental status:** HDMI display PASS, observed Doom image and frame-loop reporting; level navigation, firing, and playable controls still require operator confirmation.
+
+
+## Experimental 960x600 scaling — isolated build (PENDING hardware test)
+
+The original successfully running `640x400` executable is **left untouched**. A dedicated script copies the already-built source tree to `~/d1-doom-fb/doomgeneric-960x600`, applies `-DDOOMGENERIC_RESX=960 -DDOOMGENERIC_RESY=600`, then cleans and rebuilds **the copy only**.
+
+From SSH `d1user`:
+
+```bash
+curl -fL https://raw.githubusercontent.com/AIDevelopersMonster/Sipeed-LicheeRV-D1/main/experiments/doom-fb/build-960x600.sh -o /tmp/d1-build-960.sh
+sh /tmp/d1-build-960.sh
+```
+
+Expected build marker: `D1_DOOM_960_BUILD_PASS`. **Only after successful build**, with UART recovery available, test the independent executable:
+
+```bash
+cd ~/d1-doom-fb/doomgeneric-960x600
+./doomgeneric -iwad ~/d1-doom-fb/freedoom1.wad -nosound -skill 3 -warp 1 1
+```
+
+Quit with `q` or `Ctrl+C`. Video output occupies a centered **960x600** rectangle inside the unchanged **1024x600** physical framebuffer, with 32-pixel side margins. The backend validates framebuffer geometry before writing. Restoration is attempted on normal exit; as before, abnormal termination cannot guarantee framebuffer restoration. An increased copied-pixel area may lower FPS; measure rather than predict.
+
+Previously verified binary remains at `~/d1-doom-fb/upstream/doomgeneric/doomgeneric`; launch that path to revert to 640x400. HDMI video mode, kernel, DTB, and driver are never modified by the build.
