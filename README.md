@@ -1,29 +1,19 @@
 # Sipeed LicheeRV D1
 
-RISC-V development and research on the Allwinner D1,
-T-Head XuanTie C906.
+RISC-V development on Allwinner D1 / XuanTie C906.
 
-## Documentation
+## Documented systems
 
-- [Sipeed LicheeRV D1 Dock: Ubuntu unpacking, microSD, UART, Wi-Fi, SSH and native toolchain (RU)](docs/ubuntu-setup/README.md)
+- [Ubuntu 24.04.3 setup and toolchain](docs/ubuntu-setup/README.md) — kernel 6.8; HDMI not verified.
+- [Ubuntu 22.10 Sipeed HDMI setup (RU)](docs/ubuntu-22.10-hdmi/README.md) — kernel 5.17.0-1003-allwinner; physical HDMI and color output verified.
+- [Ubuntu 22.10 hardware test receipt](results/D1_UBUNTU22_HDMI_WIFI_BASELINE_PASS.md)
+- [Read-only HDMI inventory](scripts/d1-hdmi-inventory.sh)
+- [Freedoom via remote X11](results/D1_FREEDOOM_RENDER_PASS.md) — graphical output PASS, playable latency FAIL.
 
 ## Hardware
-- Sipeed LicheeRV D1 Dock
-- 512 MiB DDR3
-- microSD 32 GB
-- RTL8723DS Wi-Fi
 
-## Verified environment
-- Ubuntu 24.04.3 LTS
-- Linux 6.8.0-60-generic
-- GCC 13.3
-- GNU Make 4.3
-- GDB 15.1
+- Sipeed LicheeRV D1 Dock, 512 MiB DDR3, 32 GB microSD, RTL8723DS Wi-Fi.
 
-## Status
-- SD Boot: PASS
-- Ubuntu Login: PASS
-- Wi-Fi: PASS
-- SSH: PASS
-- Native Toolchain: PASS
-- HDMI: Not verified
+## Policy
+
+Protect the functioning Ubuntu 22.10 HDMI configuration: no kernel, DTB, bootloader or display-driver changes without a separate microSD backup. The original framebuffer color-test script d1_hdmi_test.py and photos have not yet been archived in this repository.
