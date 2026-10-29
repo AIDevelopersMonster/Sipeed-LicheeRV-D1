@@ -3,6 +3,10 @@
 RISC-V development and research on the Allwinner D1,
 T-Head XuanTie C906.
 
+## Documentation
+
+- [Sipeed LicheeRV D1 Dock: Ubuntu unpacking, microSD, UART, Wi-Fi, SSH and native toolchain (RU)](docs/ubuntu-setup/README.md)
+
 ## Hardware
 - Sipeed LicheeRV D1 Dock
 - 512 MiB DDR3
