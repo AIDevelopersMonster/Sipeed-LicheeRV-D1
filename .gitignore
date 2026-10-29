@@ -1,0 +1,11 @@
+*.img
+*.img.xz
+*.iso
+*.elf
+*.o
+*.bin
+*.log
+build/
+.cache/
+.env
+*.key
