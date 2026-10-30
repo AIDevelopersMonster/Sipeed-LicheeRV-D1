@@ -1,6 +1,6 @@
 # LAB-HDMI-DOOM-01 — direct HDMI Doom / Freedoom on RISC-V D1
 
-**Status: PREPARATION / NO GAMEPLAY PASS YET**  
+**Current result:** Real Doom/Freedoom gameplay on physical HDMI, controlled by USB keyboard and USB mouse through a USB hub, reported working by the hardware operator on 30 Oct 2026. This is distinct from earlier SSH-only builds; no USB-gameplay FPS benchmark is recorded.  
 **Target:** Sipeed LicheeRV D1 Dock / Ubuntu 22.10 / kernel 5.17.0-1003-allwinner / framebuffer `sun4i-drmdrmfb`.  
 **2026-10-29**.
 
@@ -53,7 +53,7 @@ Note: ownership/permissions differ between `d1user` (no sudo, shown during previ
 - [Read-only preflight](preflight.sh)
 
 
-## Gate 1 — code published, native build not yet validated on physical D1
+## Initial preparation and original build (historical)
 
 Source: [`doomgeneric_fb.c`](doomgeneric_fb.c), [`build.sh`](build.sh), [`get-freedoom.sh`](get-freedoom.sh).
 
@@ -184,3 +184,29 @@ The game attempts to exclusively claim the USB devices while running and release
 **Backout:** original native framebuffer executable remains unchanged at `~/d1-doom-fb/upstream/doomgeneric/doomgeneric`; scaled version at `~/d1-doom-fb/doomgeneric-960x600/doomgeneric` remains separate.
 
 Source modules: [`d1_usb_hid.c`](d1_usb_hid.c), [`d1_usb_hid.h`](d1_usb_hid.h), [`build-usb.sh`](build-usb.sh).
+
+
+## Physical USB hub gameplay — operator confirmation, 30 October 2026
+
+The operator explicitly confirmed: **"Все работало и играло через юсб хаб и мышка и клавиатура"** ("Everything worked and played through a USB hub, mouse and keyboard").
+
+The setup was:
+- **Sipeed LicheeRV D1 Dock** under **Ubuntu 22.10**, native executable on **RISC-V C906**.
+- **Physical HDMI** video through the existing `sun4i-drmdrmfb` framebuffer at 1024x600, with a separately built **960x600** game image (`DOOMGENERIC_RESX=960`, `DOOMGENERIC_RESY=600`).
+- **USB hub** attached to the board with **SEMICO USB keyboard** and **SIGMACHIP USB mouse**.
+- Events consumed directly through Linux `/dev/input/by-id/*-event-kbd` and `*-event-mouse` by `d1_usb_hid.c`, no X11 or separate desktop.
+- The corrected version **fails instead of silently playing without USB capture** if either keyboard or mouse cannot be opened/grabbed.
+- Previous `Permission denied` errors were traced to lack of access to `/dev/input/event*`; access was corrected before the operator's successful gameplay confirmation. The precise commands performed during that final recovery were not supplied.
+
+To build the USB version, use [build-usb.sh](build-usb.sh). It creates a **separate 960x600** executable, leaving the working original `640x400` and scaled non-USB variants intact.
+
+```bash
+curl -fL https://raw.githubusercontent.com/AIDevelopersMonster/Sipeed-LicheeRV-D1/main/experiments/doom-fb/build-usb.sh -o /tmp/d1-build-usb.sh
+sh /tmp/d1-build-usb.sh
+cd ~/d1-doom-fb/doomgeneric-usb
+./doomgeneric -iwad ~/d1-doom-fb/freedoom1.wad -nosound -skill 3 -warp 1 1
+```
+
+Stop with Q on physical USB keyboard or Ctrl+C in the SSH session. USB keyboard and mouse are temporarily grabbed while gameplay runs and released during normal exit. Keep UART as a recovery terminal; no HDMI mode or kernel configuration changes are needed.
+
+**Measurement boundary:** earlier ~44–45 graphics-loop frames/s came from the `640x400` build. That number is **not** an established FPS for USB-controlled `960x600` gameplay; don't transfer it to the new version.
