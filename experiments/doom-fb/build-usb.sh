@@ -26,6 +26,10 @@ s=p.read_text()
 if "doomgeneric_fb.o" not in s: raise SystemExit("Not framebuffer Doom")
 if "d1_usb_hid.o" not in s:
     s=s.replace("doomgeneric_fb.o", "doomgeneric_fb.o d1_usb_hid.o")
+size="CFLAGS += -DDOOMGENERIC_RESX=960 -DDOOMGENERIC_RESY=600"
+if size not in s:
+    if "-DDOOMGENERIC_RESX=" in s: raise SystemExit("Conflicting display size")
+    s=s.rstrip()+"\n\n# USB edition fills existing 1024x600 framebuffer height.\n"+size+"\n"
 p.write_text(s)
 
 p=Path("i_input.c")
@@ -71,7 +75,7 @@ if 'D1_USB_Close();' not in s:
     if needle not in s: raise SystemExit("Framebuffer cleanup anchor missing")
     s=s.replace(needle,needle+"\n    D1_USB_Close();",1)
 p.write_text(s)
-print("D1_USB_CODE_PATCHED")
+print("D1_USB_CODE_PATCHED_960x600")
 PY
 
 # Recompile only the separate copy, without a destructive global clean.
