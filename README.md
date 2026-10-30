@@ -8,7 +8,7 @@ RISC-V development on Allwinner D1 / XuanTie C906.
 - [Ubuntu 22.10 Sipeed HDMI setup (RU)](docs/ubuntu-22.10-hdmi/README.md) — kernel 5.17.0-1003-allwinner; physical HDMI and color output verified.
 - [Ubuntu 22.10 hardware test receipt](results/D1_UBUNTU22_HDMI_WIFI_BASELINE_PASS.md)
 - [Read-only HDMI inventory](scripts/d1-hdmi-inventory.sh)
-- [Freedoom via remote X11](results/D1_FREEDOOM_RENDER_PASS.md) — graphical output PASS, playable latency FAIL.
+- [DOOM / Freedoom directly on physical HDMI with USB keyboard and mouse via USB hub](experiments/doom-fb/README.md) — gameplay reported working on D1 in Ubuntu 22.10; framebuffer output, Linux evdev input, no X11.\n- [First HDMI Doom run and later USB gameplay confirmation](results/D1_DOOM_HDMI_RENDER_PASS.md).\n- [Freedoom via remote X11](results/D1_FREEDOOM_RENDER_PASS.md) — previous slower experiment on Ubuntu 24.04.3.
 
 ## Hardware
 
