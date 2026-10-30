@@ -82,3 +82,48 @@ of the proven Ubuntu HDMI/Doom baseline. An external USB audio adapter may
 avoid the on-board codec but ordinarily needs amplified speakers/headphones
 (or a separate amplifier for the passive SPK driver), and requires its own
 compatibility validation. Neither alternative is yet tested.
+
+
+## Follow-up on 2026-10-30: blocking PCM write
+
+The operator repeated the test at the original `PEAK_AMPLITUDE=1100`
+(3.4%, **not** the proposed 50% amplitude). On the next run,
+`snd_pcm_writei()` blocked until the operator pressed Ctrl+C,
+which yielded the following traceback:
+
+```text
+D1_AUDIO_TEST: 0.35s, 440 Hz, 48 kHz, 2 channel(s), peak 3.4%
+D1_AUDIO_NOTE: Mixer volume/routes are NOT changed.
+^CTraceback (most recent call last):
+  ...
+  File "/tmp/d1-first-tone.py", line 101, in main
+    wrote = write_pcm(handle, C.byref(buf, offset), frames - sent)
+KeyboardInterrupt
+```
+
+A read-only filtered `dmesg` scan showed the driver registering
+successfully and the line
+
+```text
+sun20i-codec: ASoC: pop wq checking: Playback status: inactive waiting: yes
+```
+
+No clear low-level DMA or clock error was present in the captured
+log. The `pop wq` line alone does not prove amplifier or wiring
+failure. Successful registration and parameter setup are not proof
+of functional PCM playback.
+
+The Ubuntu Allwinner kernel's original 5.17 audio changes included
+`ASoC: sun20i-codec: New driver for D1 internal codec` and an
+explicitly labeled `[WIP] ASoC: sun20i-codec: What is this ramp thing?`
+patch:
+https://lists.ubuntu.com/archives/jammy-changes/2022-June/014816.html
+
+**Decision:** Stop volume escalation and repeated PCM writes on the
+known-broken onboard path; neither the sound level nor the connected
+speaker has been tested because the playback stream fails before
+successful completion. Keep the proven kernel, DTB and display setup.
+If audio is needed now, consider an ALSA-compatible USB audio device
+with its own suitable output, or a separate SD card for BSP-based
+onboard-codec testing. Neither path has yet been hardware-validated
+on this board.
