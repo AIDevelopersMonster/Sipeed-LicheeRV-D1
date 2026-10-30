@@ -87,7 +87,7 @@ static int open_device(const char *envname, const char *pattern, const char *lab
         if (matched == 0 && paths.gl_pathc > 0) path = paths.gl_pathv[0];
     }
     if (!path) {
-        fprintf(stderr, "D1 USB: no %s found; SSH keyboard remains available.\n", label);
+        fprintf(stderr, "D1 USB: no %s found.\n", label);
         globfree(&paths);
         return -1;
     }
@@ -120,7 +120,23 @@ void D1_USB_Init(void) {
              "/dev/input/by-id/*-event-kbd", "keyboard", &kbd_grabbed);
     mouse_fd = open_device("D1_USB_MOUSE",
              "/dev/input/by-id/*-event-mouse", "mouse", &mouse_grabbed);
-    fprintf(stderr, "D1 USB: keyboard W/A/S/D, F fire, E use, Q quit; "
+
+    // Fail closed: never pretend USB gameplay works while physical keypresses
+    // leak through to the live HDMI tty1. A previous version silently fell
+    // back to SSH, making the user see Doom but type into the Linux console.
+    if (kbd_fd < 0 || mouse_fd < 0) {
+        fprintf(stderr, "\nD1 USB INPUT ERROR: keyboard and mouse were NOT both captured.\n");
+        fprintf(stderr, "Nothing is wrong with the HDMI driver.\n");
+        fprintf(stderr, "Check the input group in a NEW SSH session: id -nG\n");
+        fprintf(stderr, "If absent, on the already-open UART root console run:\n");
+        fprintf(stderr, "  usermod -aG input d1user\n");
+        fprintf(stderr, "Then fully disconnect and reconnect SSH.\n");
+        fprintf(stderr, "USB ports can be released by Ctrl+C in SSH or normal exit.\n");
+        D1_USB_Close();
+        exit(EXIT_FAILURE);
+    }
+    fprintf(stderr, "\nD1 USB READY: BOTH keyboard and mouse exclusively captured.\n");
+    fprintf(stderr, "D1 USB: keyboard WASD/arrows, F fire, E use, Q exit; "
                     "mouse X turn, left fire, right use.\n");
 }
 
