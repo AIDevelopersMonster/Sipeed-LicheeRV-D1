@@ -147,3 +147,40 @@ cd ~/d1-doom-fb/doomgeneric-960x600
 Quit with `q` or `Ctrl+C`. Video output occupies a centered **960x600** rectangle inside the unchanged **1024x600** physical framebuffer, with 32-pixel side margins. The backend validates framebuffer geometry before writing. Restoration is attempted on normal exit; as before, abnormal termination cannot guarantee framebuffer restoration. An increased copied-pixel area may lower FPS; measure rather than predict.
 
 Previously verified binary remains at `~/d1-doom-fb/upstream/doomgeneric/doomgeneric`; launch that path to revert to 640x400. HDMI video mode, kernel, DTB, and driver are never modified by the build.
+
+
+## USB keyboard + mouse: one actual gameplay test, no terminal cursor checks
+
+Detected on hardware: `usb-SEMICO_USB_Keyboard-event-kbd` and `usb-SIGMACHIP_Usb_Mouse-event-mouse`. Linux event devices exist but SSH user `d1user` initially lacked the `input` group.
+
+With UART root session preserved, perform the permission step once if needed:
+
+```bash
+usermod -aG input d1user
+```
+
+**Disconnect and reconnect SSH** for the group change to take effect. Membership in `input` is security-sensitive (access to all local input events); for a shared/multiuser machine, prefer dedicated udev rules for only these devices instead. No need to inspect the mouse cursor in terminal.
+
+Compile an **isolated** USB version, preserving both previously tested Doom binaries:
+
+```bash
+curl -fL https://raw.githubusercontent.com/AIDevelopersMonster/Sipeed-LicheeRV-D1/main/experiments/doom-fb/build-usb.sh -o /tmp/d1-build-usb.sh
+sh /tmp/d1-build-usb.sh
+```
+
+Run **from the SSH terminal**, with keyboard/mouse physically attached to D1:
+
+```bash
+cd ~/d1-doom-fb/doomgeneric-usb
+./doomgeneric -iwad ~/d1-doom-fb/freedoom1.wad -nosound -skill 3 -warp 1 1
+```
+
+USB keyboard: WASD/arrows movement; F or Ctrl fire; E/Space doors; Enter/ESC menus; 1–9 weapons; **Q exits**.
+
+USB mouse: horizontal movement turns; left button shoots; right button uses a door. Vertical motion intentionally ignored because classic Doom interprets it as forward/back movement, not looking up/down.
+
+The game attempts to exclusively claim the USB devices while running and releases them on normal exit. This prevents USB typing from affecting the underlying HDMI `tty1`; **SSH Ctrl+C remains available for recovery**. If USB access/grab fails, SSH keyboard fallback remains enabled. The backend never switches HDMI mode. USB gameplay and long-run smoothness are not yet validated by the operator.
+
+**Backout:** original native framebuffer executable remains unchanged at `~/d1-doom-fb/upstream/doomgeneric/doomgeneric`; scaled version at `~/d1-doom-fb/doomgeneric-960x600/doomgeneric` remains separate.
+
+Source modules: [`d1_usb_hid.c`](d1_usb_hid.c), [`d1_usb_hid.h`](d1_usb_hid.h), [`build-usb.sh`](build-usb.sh).
