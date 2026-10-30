@@ -142,3 +142,41 @@ not a conclusive diagnosis of our exact 5.17 kernel internals.
 **Do not** attempt an in-place kernel swap or blindly copy DTB,
 `tinymix` indices, display/audio modes, or run `apt upgrade` on the
 verified gameplay SD card.
+
+## 6. Vendor **Debian** reference image: better matched to the manufacturer example
+
+The manufacturer’s `root@MaixLinux` audio example is documented under
+“Notes about Debian” on the Dock basic-use page; the audio example includes
+three cards: analog `audiocodec`, `snddmic`, and `sndhdmi`:
+
+https://wiki.sipeed.com/hardware/en/lichee/RV/user.html
+
+For the actual Dock + HDMI + **RTL8723DS** board, Sipeed's FAQ names
+**`20211230_LicheeRV_debian_d1_hdmi_8723ds.7z`** and explains why the
+`LicheeRV_Debian_hdmi_xr829.7z` variant lacked appropriate Wi-Fi:
+
+https://wiki.sipeed.com/hardware/en/lichee/RV/problems.html
+
+Image naming and PhoenixCard setup:
+https://wiki.sipeed.com/hardware/en/lichee/RV/flash.html
+
+This is a **vendor-customized Debian/BSP** implementation, *not* evidence
+that generic Debian uses a fully working upstream audio driver.
+
+External BSP DTS examples have a specifically named
+`allwinner,sunxi-dummy-cpudai` at `0x203034c`, with actual
+`dmas = <&dma 7>, <&dma 7>` and `dma-names = "tx", "rx"`.
+This is not interchangeable with the generic ASoC
+`snd-soc-dummy-dai` label seen in Ubuntu; the latter is not, by
+itself, proof of a broken data path.
+
+Sources:
+https://bbs.aw-ol.com/user/dyd2022/posts
+https://code.googlesource.com/linux/torvalds/linux/+/f155f3b3ed1af23884ffaffe8a669722b87ac9d6/sound/soc/soc-utils.c
+
+**Next validation:** boot precisely the matched vendor Debian image on a
+different SD card; inspect `cat /proc/asound/cards` and `aplay -l` and
+use a short low-volume WAV to test analog SPK on `hw:0,0`. If
+`sndhdmi` also exists, consider an HDMI sound test via `hw:2,0`.
+Only a physically heard tone establishes functionality on our board.
+Keep the working Ubuntu 22.10 SD untouched.
