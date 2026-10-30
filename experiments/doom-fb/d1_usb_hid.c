@@ -18,6 +18,7 @@
 #include <glob.h>
 #include <linux/input.h>
 #include <stdint.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -126,6 +127,7 @@ void D1_USB_Init(void) {
 static void process_keyboard(struct input_event *ev) {
     if (ev->type != EV_KEY) return;
     if (ev->value != 0 && ev->value != 1) return; // Ignore auto-repeat (2)
+    if (ev->code == KEY_Q && ev->value == 1) { raise(SIGINT); return; }
     int key = translate_key(ev->code);
     if (key) queue_key(ev->value == 1, (unsigned char)key);
 }
