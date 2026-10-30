@@ -4,7 +4,14 @@
 // EVIOCGRAB is held only while the game runs; file close releases it.
 #define _DEFAULT_SOURCE
 #include "d1_usb_hid.h"
-#include "doomkeys.h"
+#define DKEY_UP 0xad
+#define DKEY_DOWN 0xaf
+#define DKEY_LEFT 0xac
+#define DKEY_RIGHT 0xae
+#define DKEY_FIRE 0xa3
+#define DKEY_USE 0xa2
+#define DKEY_SHIFT 0xb6
+#define DKEY_ALT 0xb8
 
 #include <errno.h>
 #include <fcntl.h>
@@ -38,17 +45,17 @@ static void queue_key(int down, unsigned char doomkey) {
 
 static int translate_key(unsigned short code) {
     switch (code) {
-        case KEY_W: case KEY_UP: return KEY_UPARROW;
-        case KEY_S: case KEY_DOWN: return KEY_DOWNARROW;
-        case KEY_A: case KEY_LEFT: return KEY_LEFTARROW;
-        case KEY_D: case KEY_RIGHT: return KEY_RIGHTARROW;
-        case KEY_F: case KEY_LEFTCTRL: case KEY_RIGHTCTRL: return KEY_FIRE;
-        case KEY_E: case KEY_SPACE: return KEY_USE;
-        case KEY_ENTER: case KEY_KPENTER: return KEY_ENTER;
-        case KEY_ESC: return KEY_ESCAPE;
-        case KEY_TAB: return KEY_TAB;
-        case KEY_LEFTSHIFT: case KEY_RIGHTSHIFT: return KEY_RSHIFT;
-        case KEY_LEFTALT: case KEY_RIGHTALT: return KEY_RALT;
+        case KEY_W: case KEY_UP: return DKEY_UP;
+        case KEY_S: case KEY_DOWN: return DKEY_DOWN;
+        case KEY_A: case KEY_LEFT: return DKEY_LEFT;
+        case KEY_D: case KEY_RIGHT: return DKEY_RIGHT;
+        case KEY_F: case KEY_LEFTCTRL: case KEY_RIGHTCTRL: return DKEY_FIRE;
+        case KEY_E: case KEY_SPACE: return DKEY_USE;
+        case KEY_ENTER: case KEY_KPENTER: return 13;
+        case KEY_ESC: return 27;
+        case KEY_TAB: return 9;
+        case KEY_LEFTSHIFT: case KEY_RIGHTSHIFT: return DKEY_SHIFT;
+        case KEY_LEFTALT: case KEY_RIGHTALT: return DKEY_ALT;
         case KEY_Q: return 'q'; // Local quit command in Doom framebuffer backend
         case KEY_P: return 'p';
         case KEY_1: return '1';
@@ -135,7 +142,7 @@ static void process_mouse(struct input_event *ev) {
         mouse_dirty = 1;
     } else if (ev->type == EV_KEY && ev->code == BTN_RIGHT &&
                (ev->value == 0 || ev->value == 1)) {
-        queue_key(ev->value == 1, KEY_USE);
+        queue_key(ev->value == 1, DKEY_USE);
     }
     // In classic Doom, vertical mouse movement means forward/back, not
     // looking up/down. Ignore REL_Y to avoid accidental movement.
