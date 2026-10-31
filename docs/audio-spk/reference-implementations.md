@@ -239,3 +239,58 @@ timeout 3s speaker-test -D hw:0,0 -c 2 -r 48000 -t sine -f 440
 
 Stop further playback tests if the known kernel `Oops` recurs.
 Keep the proven Ubuntu 22.10 + DOOM microSD untouched.
+
+
+## 8. Vendor Debian PCM playback runs but SPK silent: route hypothesis (2026-10-31)
+
+On **Debian 5.4.61** after the exact vendor `audiocodec/snddmic/sndhdmi`
+enumeration, the operator ran:
+
+```sh
+timeout 3s speaker-test -D hw:0,0 -c 2 -r 48000 -t sine -f 440
+```
+
+The `speaker-test` log showed its 48000 Hz, S16_LE, stereo playback
+stream, left/right channel messages and `Time per period = 2.899526`
+without the Ubuntu-era PCM write `EIO`. **The operator heard no sound
+from the connected passive speaker.** This confirms a different failure
+mode from Ubuntu and does NOT confirm any physically functional audio.
+
+The operator's `amixer -c 0 scontrols` exposes the vendor driver
+controls `LINEOUT`, `LINEOUT volume`, `LINEOUTL Output Select`,
+`LINEOUTR Output Select`, `DAC volume`, `digital volume`,
+`Headphone`, and `HpSpeaker`, among others.
+
+**Source-derived next test (NOT yet executed or physically validated):**
+
+The Allwinner D1 Linux AudioCodec Development Guide 1.0 (2021-04-14),
+section 4.3.2, documents `LINEOUT + SPK` with `tinymix` controls:
+15→LINEOUT volume, 17/18→differential output mux,
+31→LINEOUT switch. Its documented test uses
+`tinymix 15 31; tinymix 17 1; tinymix 18 1; tinymix 31 1`.
+For an initial short test use a more conservative level
+20/31 rather than maximum 31/31, and use **named ALSA controls**
+matching the Debian card:
+
+```sh
+amixer -c 0 cset name='LINEOUT Switch' 0
+amixer -c 0 cset name='LINEOUT volume' 20
+amixer -c 0 cset name='LINEOUTL Output Select' 1
+amixer -c 0 cset name='LINEOUTR Output Select' 1
+amixer -c 0 cset name='LINEOUT Switch' 1
+timeout 4s speaker-test -D hw:0,0 -c 2 -r 48000 -t sine -f 440
+```
+
+Reference guide:
+https://bbs.aw-ol.com/assets/uploads/files/1728962087800-d1_linux_audiocodec_%E5%BC%80%E5%8F%91%E6%8C%87%E5%8D%97.pdf
+
+A parallel vendor-oriented tutorial demonstrates `amixer -D hw:audiocodec
+cset name='LINEOUT Switch' 1`, `LINEOUT Output Select`, and
+`LINEOUT volume` on a related Allwinner SoC:
+https://icode.best/i/775124165991566
+
+Potential **next checks if silent after routing** are reading the actual
+DAC/digital mixer values and identifying whether a GPIO-controlled
+external power amplifier is enabled on the Dock. Do not assert it is a
+hardware fault or modify any boot files. This Debian build previously
+emitted recurring kernel Oops, so stop playback testing if they recur.
