@@ -180,3 +180,62 @@ use a short low-volume WAV to test analog SPK on `hw:0,0`. If
 `sndhdmi` also exists, consider an HDMI sound test via `hw:2,0`.
 Only a physically heard tone establishes functionality on our board.
 Keep the working Ubuntu 22.10 SD untouched.
+
+
+## 7. Physical vendor Debian boot and ALSA enumeration (2026-10-31)
+
+**Operator-observed result**, using the same Sipeed LicheeRV D1 Dock
+hardware as the earlier Ubuntu DOOM experiment:
+
+- The archive `20211230_LicheeRV_debian_d1_hdmi_8723ds.7z` contained
+  a 4,004,696,064-byte `.img` with `IMAGEWTY` at its beginning.
+  This is an Allwinner firmware container, **not** a raw SD image.
+- Conversion through `phoenix2img.py` produced a
+  **8,621,146,624-byte** raw disk image with an MBR signature `55 AA`
+  and GPT magic `EFI PART`.
+- PhoenixCard attempts had failed; BalenaEtcher refused the image.
+  USBImager successfully wrote the converted file to a separate SD card.
+- **Debian booted physically; HDMI, USB keyboard, and USB mouse worked.**
+- Early UART output showed a series of kernel `Oops` messages,
+  some approximately 25 seconds apart. The operator later reported
+  that this burst stopped. This build is **not certified stable**.
+- Serial console shows `root@sipeed`, with Linux kernel **5.4.61**.
+
+Read-only hardware enumeration reported by operator:
+
+```text
+root@sipeed:~# uname -r
+5.4.61
+
+root@sipeed:~# cat /proc/asound/cards
+ 0 [audiocodec     ]: audiocodec - audiocodec
+                      audiocodec
+ 1 [snddmic        ]: snddmic - snddmic
+                      snddmic
+ 2 [sndhdmi        ]: sndhdmi - sndhdmi
+                      sndhdmi
+
+root@sipeed:~# aplay -l
+**** List of PLAYBACK Hardware Devices ****
+card 0: audiocodec [audiocodec], device 0: SUNXI-CODEC 2030000.codec-0 []
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+card 2: sndhdmi [sndhdmi], device 0: 2034000.daudio-audiohdmi-dai 20340a4.hdmiaudio-0 []
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+```
+
+These are exactly the manufacturer's Debian sound card names and ALSA
+indices. **Only device enumeration is physically confirmed.** Actual
+sound on SPK `hw:0,0` or HDMI `hw:2,0` has NOT yet been heard or
+confirmed. Do not claim otherwise. The next short test, with modest
+mixer volume and no configuration changes, is:
+
+```sh
+command -v speaker-test
+amixer -c 0 scontrols
+timeout 3s speaker-test -D hw:0,0 -c 2 -r 48000 -t sine -f 440
+```
+
+Stop further playback tests if the known kernel `Oops` recurs.
+Keep the proven Ubuntu 22.10 + DOOM microSD untouched.
