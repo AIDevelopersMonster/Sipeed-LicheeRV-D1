@@ -294,3 +294,12 @@ DAC/digital mixer values and identifying whether a GPIO-controlled
 external power amplifier is enabled on the Dock. Do not assert it is a
 hardware fault or modify any boot files. This Debian build previously
 emitted recurring kernel Oops, so stop playback testing if they recur.
+
+
+## 9. Debian stability after rtkit-daemon block (2026-10-31)
+
+The user confirmed working HDMI stereo output (both left and right speakers) using ALSA `plughw:2,0` on Sipeed LicheeRV D1 Dock, vendor Debian kernel 5.4.61. Repeated kernel Oops roughly every 25 seconds were correlated with D-Bus activation of `rtkit-daemon.service` by PulseAudio; the service exited with signal SEGV. Its package was not reported as installed by APT, but systemd service logs unambiguously confirmed attempted starts and crashes.
+
+The user applied `systemctl mask --runtime --now rtkit-daemon.service`. Following the block, the user **reported one hour without kernel errors or HDMI resets**. This is an observed one-hour stability check, not proof of long-term stability. Whether the service mask is also persistent under `/etc/systemd/system` and whether stability holds after reboot remain unverified.
+
+Next: verify mask persistence before reboot; preserve working SD image; test HDMI playback with application audio (DOOM) while keeping the analog SPK fault as a separate task.
