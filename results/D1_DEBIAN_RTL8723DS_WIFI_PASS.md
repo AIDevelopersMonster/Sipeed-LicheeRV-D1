@@ -33,3 +33,13 @@ Do not change kernel, DTB, U-Boot, or the working HDMI and sound configuration. 
 ## Conclusion
 
 **PASS — RTL8723DS Wi-Fi connected and working via ConnMan on vendor Debian 5.4.61, external IP ping verified.** DNS and sustained Wi-Fi stability are not yet independently confirmed. Kernel `Oops [#183]` remains under investigation.
+
+## DNS confirmed (same session)
+
+The operator subsequently ran `getent hosts github.com` and received
+
+```
+140.82.121.4    github.com
+```
+
+**PASS — name resolution**. The previously verified IP connectivity plus this result confirms a working Wi-Fi IP route and DNS. This does **not** yet prove HTTPS to GitHub or SSH service availability. The isolated Oops #183 still needs a call trace before attribution.
